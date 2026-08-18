@@ -3,6 +3,7 @@ package com.app.fisiotech.admin.service;
 import com.app.fisiotech.admin.dto.AdminCreateRequest;
 import com.app.fisiotech.admin.entity.Admin;
 import com.app.fisiotech.admin.repository.AdminRepository;
+import com.app.fisiotech.exception.EmailJaCadastradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class AdminService {
       String emailNormalizado = normalizarEmail(request.email());
 
       if(adminRepository.existsByEmail(emailNormalizado)){
-          throw new IllegalArgumentException("Já existe administrador cadastrado com este email.");
+          throw new EmailJaCadastradoException("Já existe administrador cadastrado com este email.");
       }
 
       String senhaCriptografada = passwordEncoder.encode(request.senha());
@@ -34,7 +35,7 @@ public class AdminService {
       );
 
       return adminRepository.save(admin);
-    };
+    }
 
 
     private String normalizarEmail(String email) {

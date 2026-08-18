@@ -28,7 +28,7 @@ public class PacienteService {
         String emailNormalizado = normalizarEmail(request.email());
 
         if (pacienteRepository.existsByEmail(emailNormalizado)) {
-            throw new IllegalArgumentException("Já existe um paciente cadastrado com este email.");
+            throw new EmailJaCadastradoException("Já existe um paciente cadastrado com este email.");
         }
 
         String senhaCriptografada = passwordEncoder.encode(request.senha());
@@ -66,9 +66,9 @@ public class PacienteService {
             throw new EmailJaCadastradoException("Email já cadastrado.");
         }
 
-        pacienteASerAtualizado.setNome(request.nome());
-        pacienteASerAtualizado.setEmail(request.email());
-        pacienteASerAtualizado.setSenha(request.senha());
+        pacienteASerAtualizado.setNome(request.nome().trim());
+        pacienteASerAtualizado.setEmail(emailNormalizado);
+        pacienteASerAtualizado.setSenha(passwordEncoder.encode(request.senha()));
 
         return pacienteRepository.save(pacienteASerAtualizado);
     }

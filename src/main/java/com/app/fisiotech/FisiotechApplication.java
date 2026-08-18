@@ -7,10 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class FisiotechApplication {
 
 	public static void main(String[] args) {
-		//SpringApplication.run(FisiotechApplication.class, args);
-		SpringApplication application = new SpringApplication(FisiotechApplication.class);
-		application.setAdditionalProfiles("dev");
-		application.run(args);
+		SpringApplication.run(FisiotechApplication.class, args);
 	}
 
 }

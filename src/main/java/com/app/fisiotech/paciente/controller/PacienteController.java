@@ -54,11 +54,11 @@ public class PacienteController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<PacienteResponse> atualizarPaciente(
+    public ResponseEntity<Void> atualizarPaciente(
             @PathVariable Long id,
             @Valid @RequestBody PacienteUpdateRequest request
             ){
-        Paciente pacienteASerAtualizado = pacienteService.atualizar(id, request);
+        pacienteService.atualizar(id, request);
         return ResponseEntity.noContent().build();
     }
 
