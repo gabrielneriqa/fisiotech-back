@@ -1,2 +1,0 @@
-PacienteService:
-    função de listarTodos deve retornar apenas os associados ao id do profissional ?

@@ -1,6 +1,5 @@
-package com.app.fisiotech.paciente.entity;
+package com.app.fisiotech.profissional.entity;
 
-import com.app.fisiotech.profissional.entity.Profissional;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,12 +11,13 @@ import java.util.Objects;
 @Getter
 @Setter
 @Table(
-        name = "pacientes",
+        name = "profissionais",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_paciente_email", columnNames = "email")
+                @UniqueConstraint(name = "uk_profissional_email", columnNames = "email"),
+                @UniqueConstraint(name = "uk_profissional_registro", columnNames = "registro_profissional")
         }
 )
-public class Paciente {
+public class Profissional {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,21 +32,24 @@ public class Paciente {
     @Column(name = "senha", nullable = false, length = 255)
     private String senha;
 
+    @Column(name = "registro_profissional", nullable = false, length = 20)
+    private String registroProfissional;
+
+    @Column(name = "especialidade", nullable = false, length = 120)
+    private String especialidade;
+
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "profissional_id", nullable = false)
-    private Profissional profissional;
-
-    protected Paciente() {
+    protected Profissional() {
     }
 
-    public Paciente(String nome, String email, String senha, Profissional profissional) {
+    public Profissional(String nome, String email, String senha, String registroProfissional, String especialidade) {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
-        this.profissional = profissional;
+        this.registroProfissional = registroProfissional;
+        this.especialidade = especialidade;
     }
 
     @PrePersist
@@ -57,8 +60,8 @@ public class Paciente {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Paciente paciente)) return false;
-        return Objects.equals(id, paciente.id);
+        if (!(o instanceof Profissional profissional)) return false;
+        return Objects.equals(id, profissional.id);
     }
 
     @Override

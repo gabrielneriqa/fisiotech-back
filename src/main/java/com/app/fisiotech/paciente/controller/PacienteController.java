@@ -36,8 +36,8 @@ public class PacienteController {
 
 
     @GetMapping
-    public ResponseEntity<List<PacienteResponse>> listarTodos(){
-        List<PacienteResponse> response = pacienteService.listarTodos()
+    public ResponseEntity<List<PacienteResponse>> listarTodos(@RequestParam Long profissionalId){
+        List<PacienteResponse> response = pacienteService.listarTodos(profissionalId)
                 .stream()
                 .map(PacienteResponse::fromEntity)
                 .toList();

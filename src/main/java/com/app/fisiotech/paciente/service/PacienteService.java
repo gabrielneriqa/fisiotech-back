@@ -6,6 +6,8 @@ import com.app.fisiotech.paciente.dto.PacienteCreateRequest;
 import com.app.fisiotech.paciente.dto.PacienteUpdateRequest;
 import com.app.fisiotech.paciente.entity.Paciente;
 import com.app.fisiotech.paciente.repository.PacienteRepository;
+import com.app.fisiotech.profissional.entity.Profissional;
+import com.app.fisiotech.profissional.repository.ProfissionalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +23,7 @@ import java.util.Optional;
 public class PacienteService {
 
     private final PacienteRepository pacienteRepository;
+    private final ProfissionalRepository profissionalRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -31,12 +34,15 @@ public class PacienteService {
             throw new EmailJaCadastradoException("Já existe um paciente cadastrado com este email.");
         }
 
+        Profissional profissional = buscarProfissional(request.profissionalId());
+
         String senhaCriptografada = passwordEncoder.encode(request.senha());
 
         Paciente paciente = new Paciente(
                 request.nome().trim(),
                 emailNormalizado,
-                senhaCriptografada
+                senhaCriptografada,
+                profissional
         );
 
         return pacienteRepository.save(paciente);
@@ -44,8 +50,8 @@ public class PacienteService {
 
 
     @Transactional(readOnly = true)
-    public List<Paciente> listarTodos(){
-        return pacienteRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
+    public List<Paciente> listarTodos(Long profissionalId){
+        return pacienteRepository.findByProfissionalId(profissionalId, Sort.by(Sort.Direction.ASC, "id"));
     }
 
 
@@ -66,9 +72,12 @@ public class PacienteService {
             throw new EmailJaCadastradoException("Email já cadastrado.");
         }
 
+        Profissional profissional = buscarProfissional(request.profissionalId());
+
         pacienteASerAtualizado.setNome(request.nome().trim());
         pacienteASerAtualizado.setEmail(emailNormalizado);
         pacienteASerAtualizado.setSenha(passwordEncoder.encode(request.senha()));
+        pacienteASerAtualizado.setProfissional(profissional);
 
         return pacienteRepository.save(pacienteASerAtualizado);
     }
@@ -83,5 +92,11 @@ public class PacienteService {
 
     private String normalizarEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+
+    private Profissional buscarProfissional(Long profissionalId) {
+        return profissionalRepository.findById(profissionalId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Profissional não encontrado."));
     }
 }
