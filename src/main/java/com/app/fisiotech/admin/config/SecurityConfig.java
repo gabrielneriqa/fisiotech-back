@@ -22,6 +22,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/profissionais/**").hasRole("ADMIN")
                         .requestMatchers("/pacientes/**", "/consultas/**", "/mensagens/**", "/avaliacoes/**").hasRole("PROFISSIONAL")
+                        .requestMatchers("/me/**").hasRole("PACIENTE")
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());

@@ -70,19 +70,8 @@ public class PacienteService {
 
     @Transactional
     public Paciente atualizar(Long id, PacienteUpdateRequest request, Long profissionalId){
-        Paciente pacienteASerAtualizado = buscarPorId(id, profissionalId);
-
-        String emailNormalizado = normalizarEmail(request.email());
-
-        if(pacienteRepository.existsByEmailAndIdNot(emailNormalizado, id)){
-            throw new EmailJaCadastradoException("Email já cadastrado.");
-        }
-
-        pacienteASerAtualizado.setNome(request.nome().trim());
-        pacienteASerAtualizado.setEmail(emailNormalizado);
-        pacienteASerAtualizado.setSenha(passwordEncoder.encode(request.senha()));
-
-        return pacienteRepository.save(pacienteASerAtualizado);
+        Paciente paciente = buscarPorId(id, profissionalId);
+        return aplicarAtualizacao(paciente, request);
     }
 
 
@@ -90,6 +79,35 @@ public class PacienteService {
     public void deletar(Long id, Long profissionalId){
         Paciente pacienteASerDeletado = buscarPorId(id, profissionalId);
         pacienteRepository.delete(pacienteASerDeletado);
+    }
+
+
+    @Transactional(readOnly = true)
+    public Paciente buscarProprioPerfil(Long pacienteId) {
+        return pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));
+    }
+
+
+    @Transactional
+    public Paciente atualizarProprioPerfil(Long pacienteId, PacienteUpdateRequest request) {
+        Paciente paciente = buscarProprioPerfil(pacienteId);
+        return aplicarAtualizacao(paciente, request);
+    }
+
+
+    private Paciente aplicarAtualizacao(Paciente paciente, PacienteUpdateRequest request) {
+        String emailNormalizado = normalizarEmail(request.email());
+
+        if (pacienteRepository.existsByEmailAndIdNot(emailNormalizado, paciente.getId())) {
+            throw new EmailJaCadastradoException("Email já cadastrado.");
+        }
+
+        paciente.setNome(request.nome().trim());
+        paciente.setEmail(emailNormalizado);
+        paciente.setSenha(passwordEncoder.encode(request.senha()));
+
+        return pacienteRepository.save(paciente);
     }
 
 

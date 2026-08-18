@@ -41,11 +41,46 @@ public class AvaliacaoService {
     }
 
 
+    @Transactional
+    public Avaliacao criarComoPaciente(AvaliacaoCreateRequest request, Long pacienteId) {
+        Consulta consulta = buscarConsultaDoPaciente(request.consultaId(), pacienteId);
+
+        if (avaliacaoRepository.existsByConsultaId(consulta.getId())) {
+            throw new RecursoDuplicadoException("Essa consulta já foi avaliada.");
+        }
+
+        Avaliacao avaliacao = new Avaliacao(consulta, request.nota(), request.comentario());
+
+        return avaliacaoRepository.save(avaliacao);
+    }
+
+
+    @Transactional(readOnly = true)
+    public Avaliacao buscarPorConsultaEPaciente(Long consultaId, Long pacienteId) {
+        buscarConsultaDoPaciente(consultaId, pacienteId);
+
+        return avaliacaoRepository.findByConsultaId(consultaId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Essa consulta ainda não foi avaliada."));
+    }
+
+
     private Consulta buscarConsultaDoProfissional(Long consultaId, Long profissionalId) {
         Consulta consulta = consultaRepository.findById(consultaId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada."));
 
         if (!consulta.getPaciente().getProfissional().getId().equals(profissionalId)) {
+            throw new RecursoNaoEncontradoException("Consulta não encontrada.");
+        }
+
+        return consulta;
+    }
+
+
+    private Consulta buscarConsultaDoPaciente(Long consultaId, Long pacienteId) {
+        Consulta consulta = consultaRepository.findById(consultaId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada."));
+
+        if (!consulta.getPaciente().getId().equals(pacienteId)) {
             throw new RecursoNaoEncontradoException("Consulta não encontrada.");
         }
 

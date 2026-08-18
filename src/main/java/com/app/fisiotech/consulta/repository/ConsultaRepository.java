@@ -12,4 +12,6 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
 
     List<Consulta> findByPaciente_IdAndPaciente_Profissional_Id(Long pacienteId, Long profissionalId, Sort sort);
 
+    List<Consulta> findByPaciente_Id(Long pacienteId, Sort sort);
+
 }

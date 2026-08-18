@@ -99,6 +99,25 @@ public class ConsultaService {
     }
 
 
+    @Transactional(readOnly = true)
+    public List<Consulta> listarDoPacienteLogado(Long pacienteId) {
+        return consultaRepository.findByPaciente_Id(pacienteId, Sort.by(Sort.Direction.DESC, "dataHora"));
+    }
+
+
+    @Transactional(readOnly = true)
+    public Consulta buscarPorIdEPaciente(Long id, Long pacienteId) {
+        Consulta consulta = consultaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada."));
+
+        if (!consulta.getPaciente().getId().equals(pacienteId)) {
+            throw new RecursoNaoEncontradoException("Consulta não encontrada.");
+        }
+
+        return consulta;
+    }
+
+
     private Paciente buscarPacienteDoProfissional(Long pacienteId, Long profissionalId) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));

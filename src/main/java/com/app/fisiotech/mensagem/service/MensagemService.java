@@ -2,6 +2,7 @@ package com.app.fisiotech.mensagem.service;
 
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
 import com.app.fisiotech.mensagem.dto.MensagemCreateRequest;
+import com.app.fisiotech.mensagem.entity.AutorMensagem;
 import com.app.fisiotech.mensagem.entity.Mensagem;
 import com.app.fisiotech.mensagem.repository.MensagemRepository;
 import com.app.fisiotech.paciente.entity.Paciente;
@@ -34,6 +35,23 @@ public class MensagemService {
     public List<Mensagem> listarPorPaciente(Long pacienteId, Long profissionalId) {
         buscarPacienteDoProfissional(pacienteId, profissionalId);
 
+        return mensagemRepository.findByPacienteId(pacienteId, Sort.by(Sort.Direction.ASC, "dataEnvio"));
+    }
+
+
+    @Transactional
+    public Mensagem enviarComoPaciente(Long pacienteId, String conteudo) {
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));
+
+        Mensagem mensagem = new Mensagem(paciente, AutorMensagem.PACIENTE, conteudo);
+
+        return mensagemRepository.save(mensagem);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<Mensagem> listarDoPacienteLogado(Long pacienteId) {
         return mensagemRepository.findByPacienteId(pacienteId, Sort.by(Sort.Direction.ASC, "dataEnvio"));
     }
 
