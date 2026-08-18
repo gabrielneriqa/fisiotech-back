@@ -1,5 +1,6 @@
 package com.app.fisiotech.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +23,18 @@ public class ApiExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleEmailJaCadastrado(EmailJaCadastradoException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(criarCorpoErro(HttpStatus.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(RecursoDuplicadoException.class)
+    public ResponseEntity<Map<String, Object>> handleRecursoDuplicado(RecursoDuplicadoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(criarCorpoErro(HttpStatus.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(criarCorpoErro(HttpStatus.CONFLICT, "Não foi possível completar a operação porque este recurso está associado a outros registros."));
     }
 
     private Map<String, Object> criarCorpoErro(HttpStatus status, String mensagem) {
