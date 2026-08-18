@@ -27,14 +27,14 @@ public class PacienteService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public Paciente criar(PacienteCreateRequest request) {
+    public Paciente criar(PacienteCreateRequest request, Long profissionalId) {
         String emailNormalizado = normalizarEmail(request.email());
 
         if (pacienteRepository.existsByEmail(emailNormalizado)) {
             throw new EmailJaCadastradoException("Já existe um paciente cadastrado com este email.");
         }
 
-        Profissional profissional = buscarProfissional(request.profissionalId());
+        Profissional profissional = buscarProfissional(profissionalId);
 
         String senhaCriptografada = passwordEncoder.encode(request.senha());
 
@@ -56,15 +56,21 @@ public class PacienteService {
 
 
     @Transactional(readOnly = true)
-    public Paciente buscarPorId(Long id){
-        return pacienteRepository.findById(id)
+    public Paciente buscarPorId(Long id, Long profissionalId){
+        Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));
+
+        if (!paciente.getProfissional().getId().equals(profissionalId)) {
+            throw new RecursoNaoEncontradoException("Paciente não encontrado.");
+        }
+
+        return paciente;
     }
 
 
     @Transactional
-    public Paciente atualizar(Long id, PacienteUpdateRequest request){
-        Paciente pacienteASerAtualizado = buscarPorId(id);
+    public Paciente atualizar(Long id, PacienteUpdateRequest request, Long profissionalId){
+        Paciente pacienteASerAtualizado = buscarPorId(id, profissionalId);
 
         String emailNormalizado = normalizarEmail(request.email());
 
@@ -72,20 +78,17 @@ public class PacienteService {
             throw new EmailJaCadastradoException("Email já cadastrado.");
         }
 
-        Profissional profissional = buscarProfissional(request.profissionalId());
-
         pacienteASerAtualizado.setNome(request.nome().trim());
         pacienteASerAtualizado.setEmail(emailNormalizado);
         pacienteASerAtualizado.setSenha(passwordEncoder.encode(request.senha()));
-        pacienteASerAtualizado.setProfissional(profissional);
 
         return pacienteRepository.save(pacienteASerAtualizado);
     }
 
 
     @Transactional
-    public void deletar(Long id){
-        Paciente pacienteASerDeletado = buscarPorId(id);
+    public void deletar(Long id, Long profissionalId){
+        Paciente pacienteASerDeletado = buscarPorId(id, profissionalId);
         pacienteRepository.delete(pacienteASerDeletado);
     }
 

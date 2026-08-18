@@ -2,7 +2,6 @@ package com.app.fisiotech.paciente.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record PacienteCreateRequest(
@@ -17,9 +16,6 @@ public record PacienteCreateRequest(
 
         @NotBlank(message = "A senha é obrigatória")
         @Size(min = 8, max = 100, message = "A senha deve ter entre 8 e 100 caracteres")
-        String senha,
-
-        @NotNull(message = "O profissional é obrigatório")
-        Long profissionalId
+        String senha
 ) {
 }
