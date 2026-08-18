@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -53,6 +54,16 @@ public class MensagemService {
     @Transactional(readOnly = true)
     public List<Mensagem> listarDoPacienteLogado(Long pacienteId) {
         return mensagemRepository.findByPacienteId(pacienteId, Sort.by(Sort.Direction.ASC, "dataEnvio"));
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<Mensagem> listarCaixaEntrada(Long profissionalId) {
+        return pacienteRepository.findByProfissionalId(profissionalId, Sort.unsorted())
+                .stream()
+                .flatMap(paciente -> mensagemRepository.findFirstByPacienteIdOrderByDataEnvioDesc(paciente.getId()).stream())
+                .sorted(Comparator.comparing(Mensagem::getDataEnvio).reversed())
+                .toList();
     }
 
 

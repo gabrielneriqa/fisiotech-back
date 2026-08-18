@@ -1,6 +1,7 @@
 package com.app.fisiotech.mensagem.controller;
 
 import com.app.fisiotech.auth.security.AuthenticatedUser;
+import com.app.fisiotech.mensagem.dto.CaixaEntradaItemResponse;
 import com.app.fisiotech.mensagem.dto.MensagemCreateRequest;
 import com.app.fisiotech.mensagem.dto.MensagemResponse;
 import com.app.fisiotech.mensagem.entity.Mensagem;
@@ -47,6 +48,17 @@ public class MensagemController {
         List<MensagemResponse> response = mensagemService.listarPorPaciente(pacienteId, usuarioLogado.getId())
                 .stream()
                 .map(MensagemResponse::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/caixa-entrada")
+    public ResponseEntity<List<CaixaEntradaItemResponse>> caixaEntrada(@AuthenticationPrincipal AuthenticatedUser usuarioLogado) {
+        List<CaixaEntradaItemResponse> response = mensagemService.listarCaixaEntrada(usuarioLogado.getId())
+                .stream()
+                .map(CaixaEntradaItemResponse::fromUltimaMensagem)
                 .toList();
 
         return ResponseEntity.ok(response);
