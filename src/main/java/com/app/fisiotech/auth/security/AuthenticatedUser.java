@@ -12,12 +12,14 @@ import java.util.List;
 public class AuthenticatedUser implements UserDetails {
 
     private final Long id;
+    private final String nome;
     private final String email;
     private final String senha;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public AuthenticatedUser(Long id, String email, String senha, String role) {
+    public AuthenticatedUser(Long id, String nome, String email, String senha, String role) {
         this.id = id;
+        this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.authorities = List.of(new SimpleGrantedAuthority(role));

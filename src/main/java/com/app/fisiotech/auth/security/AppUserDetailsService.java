@@ -33,11 +33,11 @@ public class AppUserDetailsService implements UserDetailsService {
     }
 
     private AuthenticatedUser toAuthenticatedUser(Profissional profissional) {
-        return new AuthenticatedUser(profissional.getId(), profissional.getEmail(), profissional.getSenha(), ROLE_PROFISSIONAL);
+        return new AuthenticatedUser(profissional.getId(), profissional.getNome(), profissional.getEmail(), profissional.getSenha(), ROLE_PROFISSIONAL);
     }
 
     private AuthenticatedUser toAuthenticatedUser(Admin admin) {
-        return new AuthenticatedUser(admin.getId(), admin.getEmail(), admin.getSenha(), ROLE_ADMIN);
+        return new AuthenticatedUser(admin.getId(), admin.getNome(), admin.getEmail(), admin.getSenha(), ROLE_ADMIN);
     }
 
 }
