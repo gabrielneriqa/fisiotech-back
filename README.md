@@ -33,7 +33,19 @@ O projeto tem dois profiles Spring relevantes para rodar localmente:
 - **default** (`application.properties`): só define o nome da aplicação. Sozinho, sem um profile adicional, a aplicação sobe mas **não tem usuário admin nem H2 console habilitados** — normalmente você vai querer combiná-lo com o profile `dev`.
 - **dev** (`application-dev.properties`): habilita o console do H2, o `show-sql` e cria automaticamente um usuário **admin** com credenciais fixas (`admin@fisiotech.com` / `12345678`) — é o profile recomendado para desenvolvimento e testes locais.
 
-Para rodar em modo dev (banco H2 em memória, sem precisar de nenhum banco externo):
+Para rodar em modo dev (banco H2 em memória, sem precisar de nenhum banco externo), o jeito mais rápido é usar o script incluído no repositório:
+
+```bash
+# Linux/macOS/Git Bash
+./dev.sh          # porta 8080 por padrão
+./dev.sh 8081     # ou informe outra porta
+
+# Windows PowerShell
+.\dev.ps1
+.\dev.ps1 -Port 8081
+```
+
+Isso equivale a rodar diretamente:
 
 ```bash
 # Linux/macOS/Git Bash
