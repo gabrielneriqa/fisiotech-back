@@ -1,6 +1,8 @@
 package com.app.fisiotech.paciente.dto;
 
 import com.app.fisiotech.paciente.entity.Paciente;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record PacienteResponse(
@@ -9,6 +11,13 @@ public record PacienteResponse(
         String email,
         Long profissionalId,
         String profissionalNome,
+        LocalDate dataNascimento,
+        String sexo,
+        String profissao,
+        String telefone,
+        String endereco,
+        String bairro,
+        String foto,
         LocalDateTime dataCriacao
 ) {
 
@@ -22,6 +31,13 @@ public record PacienteResponse(
                 paciente.getEmail(),
                 profissionalId,
                 profissionalNome,
+                paciente.getDataNascimento(),
+                paciente.getSexo(),
+                paciente.getProfissao(),
+                paciente.getTelefone(),
+                paciente.getEndereco(),
+                paciente.getBairro(),
+                paciente.getFoto(),
                 paciente.getDataCriacao()
         );
     }

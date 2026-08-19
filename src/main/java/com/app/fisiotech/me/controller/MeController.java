@@ -5,13 +5,20 @@ import com.app.fisiotech.avaliacao.dto.AvaliacaoCreateRequest;
 import com.app.fisiotech.avaliacao.dto.AvaliacaoResponse;
 import com.app.fisiotech.avaliacao.service.AvaliacaoService;
 import com.app.fisiotech.consulta.dto.ConsultaResponse;
+import com.app.fisiotech.consulta.dto.DisponibilidadeResponse;
+import com.app.fisiotech.consulta.dto.MeConsultaCreateRequest;
+import com.app.fisiotech.consulta.entity.Consulta;
 import com.app.fisiotech.consulta.service.ConsultaService;
+import com.app.fisiotech.consulta.service.DisponibilidadeService;
 import com.app.fisiotech.me.dto.MinhaMensagemCreateRequest;
 import com.app.fisiotech.mensagem.dto.MensagemResponse;
 import com.app.fisiotech.mensagem.service.MensagemService;
+import com.app.fisiotech.paciente.dto.AlterarSenhaRequest;
+import com.app.fisiotech.paciente.dto.MePerfilUpdateRequest;
 import com.app.fisiotech.paciente.dto.PacienteResponse;
-import com.app.fisiotech.paciente.dto.PacienteUpdateRequest;
 import com.app.fisiotech.paciente.service.PacienteService;
+import com.app.fisiotech.profissional.dto.ProfissionalPublicoResponse;
+import com.app.fisiotech.profissional.service.ProfissionalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,6 +38,8 @@ public class MeController {
     private final ConsultaService consultaService;
     private final MensagemService mensagemService;
     private final AvaliacaoService avaliacaoService;
+    private final ProfissionalService profissionalService;
+    private final DisponibilidadeService disponibilidadeService;
 
     @GetMapping
     public ResponseEntity<PacienteResponse> perfil(@AuthenticationPrincipal AuthenticatedUser usuarioLogado) {
@@ -38,11 +48,50 @@ public class MeController {
 
     @PutMapping
     public ResponseEntity<Void> atualizarPerfil(
-            @Valid @RequestBody PacienteUpdateRequest request,
+            @Valid @RequestBody MePerfilUpdateRequest request,
             @AuthenticationPrincipal AuthenticatedUser usuarioLogado
     ) {
-        pacienteService.atualizarProprioPerfil(usuarioLogado.getId(), request);
+        pacienteService.atualizarPerfilProprio(usuarioLogado.getId(), request);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/senha")
+    public ResponseEntity<Void> alterarSenha(
+            @Valid @RequestBody AlterarSenhaRequest request,
+            @AuthenticationPrincipal AuthenticatedUser usuarioLogado
+    ) {
+        pacienteService.alterarSenha(usuarioLogado.getId(), request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/profissionais")
+    public ResponseEntity<List<ProfissionalPublicoResponse>> buscarProfissionais(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String especialidade
+    ) {
+        List<ProfissionalPublicoResponse> response = profissionalService.buscarPublico(nome, especialidade)
+                .stream()
+                .map(ProfissionalPublicoResponse::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/profissionais/{id}/disponibilidade")
+    public ResponseEntity<DisponibilidadeResponse> buscarDisponibilidade(
+            @PathVariable Long id,
+            @RequestParam LocalDate data
+    ) {
+        return ResponseEntity.ok(disponibilidadeService.buscarDisponibilidade(id, data));
+    }
+
+    @PostMapping("/consultas")
+    public ResponseEntity<ConsultaResponse> marcarConsulta(
+            @Valid @RequestBody MeConsultaCreateRequest request,
+            @AuthenticationPrincipal AuthenticatedUser usuarioLogado
+    ) {
+        Consulta consultaCriada = consultaService.criarComoPaciente(usuarioLogado.getId(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ConsultaResponse.fromEntity(consultaCriada));
     }
 
     @GetMapping("/consultas")

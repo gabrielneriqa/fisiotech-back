@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,13 @@ public class ProfissionalService {
                 request.registroProfissional().trim(),
                 request.especialidade().trim()
         );
+
+        profissional.setValorConsultaParticular(request.valorConsultaParticular());
+        profissional.setConveniosAceitos(request.conveniosAceitos() != null ? request.conveniosAceitos() : new ArrayList<>());
+        profissional.setFoto(request.foto());
+        profissional.setDataNascimento(request.dataNascimento());
+        profissional.setSexo(request.sexo());
+        profissional.setTelefone(request.telefone());
 
         return profissionalRepository.save(profissional);
     }
@@ -80,8 +88,26 @@ public class ProfissionalService {
         profissionalASerAtualizado.setSenha(passwordEncoder.encode(request.senha()));
         profissionalASerAtualizado.setRegistroProfissional(request.registroProfissional().trim());
         profissionalASerAtualizado.setEspecialidade(request.especialidade().trim());
+        profissionalASerAtualizado.setValorConsultaParticular(request.valorConsultaParticular());
+        profissionalASerAtualizado.setConveniosAceitos(request.conveniosAceitos() != null ? request.conveniosAceitos() : new ArrayList<>());
+        profissionalASerAtualizado.setFoto(request.foto());
+        profissionalASerAtualizado.setDataNascimento(request.dataNascimento());
+        profissionalASerAtualizado.setSexo(request.sexo());
+        profissionalASerAtualizado.setTelefone(request.telefone());
 
         return profissionalRepository.save(profissionalASerAtualizado);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<Profissional> buscarPublico(String nome, String especialidade) {
+        String nomeFiltro = nome != null ? nome.trim().toLowerCase(Locale.ROOT) : null;
+        String especialidadeFiltro = especialidade != null ? especialidade.trim().toLowerCase(Locale.ROOT) : null;
+
+        return profissionalRepository.findAll(Sort.by(Sort.Direction.ASC, "nome")).stream()
+                .filter(p -> nomeFiltro == null || nomeFiltro.isBlank() || p.getNome().toLowerCase(Locale.ROOT).contains(nomeFiltro))
+                .filter(p -> especialidadeFiltro == null || especialidadeFiltro.isBlank() || p.getEspecialidade().toLowerCase(Locale.ROOT).contains(especialidadeFiltro))
+                .toList();
     }
 
 

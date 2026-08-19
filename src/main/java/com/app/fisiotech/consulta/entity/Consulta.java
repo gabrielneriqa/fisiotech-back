@@ -1,6 +1,7 @@
 package com.app.fisiotech.consulta.entity;
 
 import com.app.fisiotech.paciente.entity.Paciente;
+import com.app.fisiotech.profissional.entity.Profissional;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +24,10 @@ public class Consulta {
     @JoinColumn(name = "paciente_id", nullable = false)
     private Paciente paciente;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "profissional_id", nullable = false)
+    private Profissional profissional;
+
     @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHora;
 
@@ -39,6 +44,9 @@ public class Consulta {
 
     @Column(name = "valor", precision = 10, scale = 2)
     private BigDecimal valor;
+
+    @Column(name = "foi_remarcada", nullable = false)
+    private boolean foiRemarcada = false;
 
     @Embedded
     private QuadroClinico quadroClinico = new QuadroClinico();
@@ -58,8 +66,9 @@ public class Consulta {
     protected Consulta() {
     }
 
-    public Consulta(Paciente paciente, LocalDateTime dataHora, TipoConsulta tipo, String convenio, BigDecimal valor) {
+    public Consulta(Paciente paciente, Profissional profissional, LocalDateTime dataHora, TipoConsulta tipo, String convenio, BigDecimal valor) {
         this.paciente = paciente;
+        this.profissional = profissional;
         this.dataHora = dataHora;
         this.tipo = tipo;
         this.convenio = convenio;

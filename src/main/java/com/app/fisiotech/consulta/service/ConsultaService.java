@@ -2,17 +2,24 @@ package com.app.fisiotech.consulta.service;
 
 import com.app.fisiotech.avaliacao.repository.AvaliacaoRepository;
 import com.app.fisiotech.consulta.dto.ConsultaCreateRequest;
+import com.app.fisiotech.consulta.dto.MeConsultaCreateRequest;
 import com.app.fisiotech.consulta.dto.ConsultaUpdateRequest;
 import com.app.fisiotech.consulta.entity.Consulta;
+import com.app.fisiotech.consulta.entity.StatusConsulta;
 import com.app.fisiotech.consulta.repository.ConsultaRepository;
+import com.app.fisiotech.exception.HorarioIndisponivelException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
 import com.app.fisiotech.paciente.entity.Paciente;
 import com.app.fisiotech.paciente.repository.PacienteRepository;
+import com.app.fisiotech.profissional.entity.Profissional;
+import com.app.fisiotech.profissional.repository.ProfissionalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,14 +28,17 @@ public class ConsultaService {
 
     private final ConsultaRepository consultaRepository;
     private final PacienteRepository pacienteRepository;
+    private final ProfissionalRepository profissionalRepository;
     private final AvaliacaoRepository avaliacaoRepository;
 
     @Transactional
     public Consulta criar(ConsultaCreateRequest request, Long profissionalId) {
         Paciente paciente = buscarPacienteDoProfissional(request.pacienteId(), profissionalId);
+        Profissional profissional = profissionalRepository.getReferenceById(profissionalId);
 
         Consulta consulta = new Consulta(
                 paciente,
+                profissional,
                 request.dataHora(),
                 request.tipo(),
                 request.convenio(),
@@ -39,15 +49,53 @@ public class ConsultaService {
     }
 
 
+    @Transactional
+    public Consulta criarComoPaciente(Long pacienteId, MeConsultaCreateRequest request) {
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));
+
+        Profissional profissional = profissionalRepository.findById(request.profissionalId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Profissional não encontrado."));
+
+        boolean horarioOcupado = consultaRepository.existsByProfissionalIdAndDataHoraAndStatusNot(
+                request.profissionalId(), request.dataHora(), StatusConsulta.CANCELADA);
+
+        if (horarioOcupado) {
+            throw new HorarioIndisponivelException("Este horário não está mais disponível.");
+        }
+
+        boolean particular = request.convenio() == null || request.convenio().isBlank();
+        BigDecimal valor = particular ? profissional.getValorConsultaParticular() : null;
+
+        Consulta consulta = new Consulta(
+                paciente,
+                profissional,
+                request.dataHora(),
+                request.tipo(),
+                request.convenio(),
+                valor
+        );
+
+        consulta = consultaRepository.save(consulta);
+
+        if (paciente.getProfissional() == null) {
+            paciente.setProfissional(profissional);
+            pacienteRepository.save(paciente);
+        }
+
+        return consulta;
+    }
+
+
     @Transactional(readOnly = true)
     public List<Consulta> listarTodos(Long profissionalId, Long pacienteId) {
         Sort sort = Sort.by(Sort.Direction.DESC, "dataHora");
 
         if (pacienteId != null) {
-            return consultaRepository.findByPaciente_IdAndPaciente_Profissional_Id(pacienteId, profissionalId, sort);
+            return consultaRepository.findByPacienteIdAndProfissionalId(pacienteId, profissionalId, sort);
         }
 
-        return consultaRepository.findByPaciente_Profissional_Id(profissionalId, sort);
+        return consultaRepository.findByProfissionalId(profissionalId, sort);
     }
 
 
@@ -56,8 +104,7 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada."));
 
-        if (consulta.getPaciente().getProfissional() == null
-                || !consulta.getPaciente().getProfissional().getId().equals(profissionalId)) {
+        if (!consulta.getProfissional().getId().equals(profissionalId)) {
             throw new RecursoNaoEncontradoException("Consulta não encontrada.");
         }
 
@@ -68,6 +115,11 @@ public class ConsultaService {
     @Transactional
     public Consulta atualizar(Long id, ConsultaUpdateRequest request, Long profissionalId) {
         Consulta consulta = buscarPorId(id, profissionalId);
+
+        LocalDateTime dataHoraAntes = consulta.getDataHora();
+        if (!dataHoraAntes.equals(request.dataHora())) {
+            consulta.setFoiRemarcada(true);
+        }
 
         consulta.setDataHora(request.dataHora());
         consulta.setTipo(request.tipo());

@@ -1,17 +1,23 @@
 package com.app.fisiotech.consulta.repository;
 
 import com.app.fisiotech.consulta.entity.Consulta;
+import com.app.fisiotech.consulta.entity.StatusConsulta;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
 
-    List<Consulta> findByPaciente_Profissional_Id(Long profissionalId, Sort sort);
+    List<Consulta> findByProfissionalId(Long profissionalId, Sort sort);
 
-    List<Consulta> findByPaciente_IdAndPaciente_Profissional_Id(Long pacienteId, Long profissionalId, Sort sort);
+    List<Consulta> findByPacienteIdAndProfissionalId(Long pacienteId, Long profissionalId, Sort sort);
 
     List<Consulta> findByPaciente_Id(Long pacienteId, Sort sort);
+
+    boolean existsByProfissionalIdAndDataHoraAndStatusNot(Long profissionalId, LocalDateTime dataHora, StatusConsulta status);
+
+    List<Consulta> findByProfissionalIdAndDataHoraBetweenAndStatusNot(Long profissionalId, LocalDateTime inicio, LocalDateTime fim, StatusConsulta status);
 
 }

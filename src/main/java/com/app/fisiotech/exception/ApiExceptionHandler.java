@@ -31,6 +31,18 @@ public class ApiExceptionHandler {
                 .body(criarCorpoErro(HttpStatus.CONFLICT, ex.getMessage()));
     }
 
+    @ExceptionHandler(HorarioIndisponivelException.class)
+    public ResponseEntity<Map<String, Object>> handleHorarioIndisponivel(HorarioIndisponivelException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(criarCorpoErro(HttpStatus.CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(SenhaAtualInvalidaException.class)
+    public ResponseEntity<Map<String, Object>> handleSenhaAtualInvalida(SenhaAtualInvalidaException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(criarCorpoErro(HttpStatus.BAD_REQUEST, ex.getMessage()));
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)

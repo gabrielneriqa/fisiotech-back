@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
-public record PacienteUpdateRequest(
+public record MePerfilUpdateRequest(
         @NotBlank(message = "O nome é obrigatório")
         @Size(max = 120, message = "O nome deve ter no máximo 120 caracteres")
         String nome,
@@ -15,10 +15,6 @@ public record PacienteUpdateRequest(
         @Email(message = "Email inválido")
         @Size(max = 120, message = "O email deve ter no máximo 120 caracteres")
         String email,
-
-        @NotBlank(message = "A senha é obrigatória")
-        @Size(min = 8, max = 100, message = "A senha deve ter entre 8 e 100 caracteres")
-        String senha,
 
         LocalDate dataNascimento,
 

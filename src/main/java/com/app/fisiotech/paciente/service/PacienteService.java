@@ -2,9 +2,12 @@ package com.app.fisiotech.paciente.service;
 
 import com.app.fisiotech.exception.EmailJaCadastradoException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
+import com.app.fisiotech.paciente.dto.AlterarSenhaRequest;
+import com.app.fisiotech.paciente.dto.MePerfilUpdateRequest;
 import com.app.fisiotech.paciente.dto.PacienteAdminUpdateRequest;
 import com.app.fisiotech.paciente.dto.PacienteCreateRequest;
 import com.app.fisiotech.paciente.dto.PacienteUpdateRequest;
+import com.app.fisiotech.exception.SenhaAtualInvalidaException;
 import com.app.fisiotech.paciente.entity.Paciente;
 import com.app.fisiotech.paciente.repository.PacienteRepository;
 import com.app.fisiotech.profissional.entity.Profissional;
@@ -112,9 +115,38 @@ public class PacienteService {
 
 
     @Transactional
-    public Paciente atualizarProprioPerfil(Long pacienteId, PacienteUpdateRequest request) {
+    public Paciente atualizarPerfilProprio(Long pacienteId, MePerfilUpdateRequest request) {
         Paciente paciente = buscarProprioPerfil(pacienteId);
-        return aplicarAtualizacao(paciente, request);
+        String emailNormalizado = normalizarEmail(request.email());
+
+        if (pacienteRepository.existsByEmailAndIdNot(emailNormalizado, paciente.getId())) {
+            throw new EmailJaCadastradoException("Email já cadastrado.");
+        }
+
+        paciente.setNome(request.nome().trim());
+        paciente.setEmail(emailNormalizado);
+        paciente.setDataNascimento(request.dataNascimento());
+        paciente.setSexo(request.sexo());
+        paciente.setProfissao(request.profissao());
+        paciente.setTelefone(request.telefone());
+        paciente.setEndereco(request.endereco());
+        paciente.setBairro(request.bairro());
+        paciente.setFoto(request.foto());
+
+        return pacienteRepository.save(paciente);
+    }
+
+
+    @Transactional
+    public void alterarSenha(Long pacienteId, AlterarSenhaRequest request) {
+        Paciente paciente = buscarProprioPerfil(pacienteId);
+
+        if (!passwordEncoder.matches(request.senhaAtual(), paciente.getSenha())) {
+            throw new SenhaAtualInvalidaException("Senha atual incorreta.");
+        }
+
+        paciente.setSenha(passwordEncoder.encode(request.novaSenha()));
+        pacienteRepository.save(paciente);
     }
 
 
@@ -128,6 +160,13 @@ public class PacienteService {
         paciente.setNome(request.nome().trim());
         paciente.setEmail(emailNormalizado);
         paciente.setSenha(passwordEncoder.encode(request.senha()));
+        paciente.setDataNascimento(request.dataNascimento());
+        paciente.setSexo(request.sexo());
+        paciente.setProfissao(request.profissao());
+        paciente.setTelefone(request.telefone());
+        paciente.setEndereco(request.endereco());
+        paciente.setBairro(request.bairro());
+        paciente.setFoto(request.foto());
 
         return pacienteRepository.save(paciente);
     }

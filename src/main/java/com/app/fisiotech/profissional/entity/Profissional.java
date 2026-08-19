@@ -4,7 +4,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -40,6 +44,26 @@ public class Profissional {
 
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
+
+    @Column(name = "valor_consulta_particular", precision = 10, scale = 2)
+    private BigDecimal valorConsultaParticular;
+
+    @ElementCollection
+    @CollectionTable(name = "profissional_convenios", joinColumns = @JoinColumn(name = "profissional_id"))
+    @Column(name = "convenio")
+    private List<String> conveniosAceitos = new ArrayList<>();
+
+    @Column(name = "foto")
+    private String foto;
+
+    @Column(name = "data_nascimento")
+    private LocalDate dataNascimento;
+
+    @Column(name = "sexo", length = 30)
+    private String sexo;
+
+    @Column(name = "telefone", length = 30)
+    private String telefone;
 
     protected Profissional() {
     }

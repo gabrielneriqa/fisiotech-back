@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -40,6 +41,27 @@ public class Paciente {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "profissional_id", nullable = true)
     private Profissional profissional;
+
+    @Column(name = "data_nascimento")
+    private LocalDate dataNascimento;
+
+    @Column(name = "sexo", length = 30)
+    private String sexo;
+
+    @Column(name = "profissao", length = 120)
+    private String profissao;
+
+    @Column(name = "telefone", length = 30)
+    private String telefone;
+
+    @Column(name = "endereco", length = 200)
+    private String endereco;
+
+    @Column(name = "bairro", length = 120)
+    private String bairro;
+
+    @Column(name = "foto")
+    private String foto;
 
     protected Paciente() {
     }
