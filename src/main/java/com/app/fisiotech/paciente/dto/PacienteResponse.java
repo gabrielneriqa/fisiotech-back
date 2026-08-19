@@ -8,6 +8,7 @@ public record PacienteResponse(
         String nome,
         String email,
         Long profissionalId,
+        String profissionalNome,
         LocalDateTime dataCriacao
 ) {
 
@@ -17,6 +18,7 @@ public record PacienteResponse(
                 paciente.getNome(),
                 paciente.getEmail(),
                 paciente.getProfissional().getId(),
+                paciente.getProfissional().getNome(),
                 paciente.getDataCriacao()
         );
     }

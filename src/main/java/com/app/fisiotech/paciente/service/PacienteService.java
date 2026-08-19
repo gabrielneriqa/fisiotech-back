@@ -2,6 +2,7 @@ package com.app.fisiotech.paciente.service;
 
 import com.app.fisiotech.exception.EmailJaCadastradoException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
+import com.app.fisiotech.paciente.dto.PacienteAdminUpdateRequest;
 import com.app.fisiotech.paciente.dto.PacienteCreateRequest;
 import com.app.fisiotech.paciente.dto.PacienteUpdateRequest;
 import com.app.fisiotech.paciente.entity.Paciente;
@@ -106,6 +107,42 @@ public class PacienteService {
         paciente.setNome(request.nome().trim());
         paciente.setEmail(emailNormalizado);
         paciente.setSenha(passwordEncoder.encode(request.senha()));
+
+        return pacienteRepository.save(paciente);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<Paciente> listarTodosAdmin() {
+        return pacienteRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
+    }
+
+
+    @Transactional(readOnly = true)
+    public Paciente buscarPorIdAdmin(Long id) {
+        return pacienteRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));
+    }
+
+
+    @Transactional
+    public Paciente atualizarAdmin(Long id, PacienteAdminUpdateRequest request) {
+        Paciente paciente = buscarPorIdAdmin(id);
+        String emailNormalizado = normalizarEmail(request.email());
+
+        if (pacienteRepository.existsByEmailAndIdNot(emailNormalizado, paciente.getId())) {
+            throw new EmailJaCadastradoException("Email já cadastrado.");
+        }
+
+        Profissional profissional = buscarProfissional(request.profissionalId());
+
+        paciente.setNome(request.nome().trim());
+        paciente.setEmail(emailNormalizado);
+        paciente.setProfissional(profissional);
+
+        if (request.senha() != null && !request.senha().isBlank()) {
+            paciente.setSenha(passwordEncoder.encode(request.senha()));
+        }
 
         return pacienteRepository.save(paciente);
     }
