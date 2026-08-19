@@ -111,11 +111,11 @@ A API usa **HTTP Basic Auth** (usuário = email, senha = senha cadastrada) e tem
 
 | Papel | Prefixo de rotas protegidas | Quem gerencia |
 |---|---|---|
-| `ROLE_ADMIN` | `/profissionais/**` | Único (seed do profile `dev`, ou variáveis de ambiente em prod) |
+| `ROLE_ADMIN` | `/profissionais/**`, `/admin/pacientes/**` | Único (seed do profile `dev`, ou variáveis de ambiente em prod) |
 | `ROLE_PROFISSIONAL` | `/pacientes/**`, `/consultas/**`, `/mensagens/**`, `/avaliacoes/**` | Cadastrado pelo admin |
-| `ROLE_PACIENTE` | `/me/**` | Cadastrado pelo profissional responsável |
+| `ROLE_PACIENTE` | `/me/**` | Cadastrado pelo profissional responsável, ou autocadastrado via `POST /pacientes/cadastro` (rota pública, sem autenticação — o único paciente cria a própria conta sem vínculo com nenhum profissional até marcar a primeira consulta) |
 
-Todo recurso é isolado por dono: um profissional só enxerga os próprios pacientes/consultas/mensagens, e tentar acessar um recurso de outro profissional retorna **404** (não 403, para não confirmar a existência do recurso a quem não tem acesso).
+Todo recurso é isolado por dono: um profissional só enxerga os próprios pacientes/consultas, e tentar acessar um recurso de outro profissional retorna **404** (não 403, para não confirmar a existência do recurso a quem não tem acesso). **Mensagens são a exceção**: a posse de uma conversa não é "esse paciente é meu", e sim "existe consulta marcada entre esse paciente e esse profissional" (qualquer status, inclusive cancelada) — então um profissional só consegue trocar mensagem com um paciente depois que existir pelo menos uma consulta entre os dois, mesmo que o profissional tenha sido quem cadastrou aquele paciente.
 
 Em modo `dev`, o admin já vem pronto:
 
@@ -128,7 +128,7 @@ Em produção (profile `prod`), o admin é criado a partir das variáveis de amb
 
 ## Testando a API do zero (fluxo completo via curl)
 
-Com a aplicação rodando em modo `dev` (`http://localhost:8080`), este é o caminho completo para popular dados e testar as três camadas de autenticação:
+Com a aplicação rodando em modo `dev` (`http://localhost:8080`), este é o caminho completo para popular dados e testar as três camadas de autenticação — incluindo o autocadastro de paciente, a busca/agendamento de consulta pelo próprio paciente e a troca de mensagens (que **exige uma consulta marcada entre as partes**, veja [Autenticação e papéis](#autenticação-e-papéis)).
 
 **1. Admin cria um profissional:**
 
@@ -140,7 +140,9 @@ curl -u admin@fisiotech.com:12345678 -X POST http://localhost:8080/profissionais
     "email": "ana@fisiotech.com",
     "senha": "senha123",
     "registroProfissional": "CREFITO-11111",
-    "especialidade": "Ortopedia"
+    "especialidade": "Ortopedia",
+    "valorConsultaParticular": 150.00,
+    "conveniosAceitos": ["Unimed", "Bradesco Saúde"]
   }'
 ```
 
@@ -150,10 +152,10 @@ curl -u admin@fisiotech.com:12345678 -X POST http://localhost:8080/profissionais
 curl -u ana@fisiotech.com:senha123 http://localhost:8080/auth/me
 ```
 
-**3. Profissional cadastra um paciente:**
+**3. Paciente se autocadastra (rota pública, sem autenticação — ainda não tem nenhum profissional vinculado):**
 
 ```bash
-curl -u ana@fisiotech.com:senha123 -X POST http://localhost:8080/pacientes \
+curl -X POST http://localhost:8080/pacientes/cadastro \
   -H "Content-Type: application/json" \
   -d '{
     "nome": "Joao Silva",
@@ -162,36 +164,73 @@ curl -u ana@fisiotech.com:senha123 -X POST http://localhost:8080/pacientes \
   }'
 ```
 
-**4. Profissional envia uma mensagem ao paciente (use o `pacienteId` retornado no passo anterior, normalmente `1`):**
+**4. Paciente confirma o login, busca profissionais disponíveis e consulta a disponibilidade de horários (use o `id` retornado no passo 1, normalmente `1`):**
 
 ```bash
+curl -u joao@paciente.com:senha123 http://localhost:8080/auth/me
+curl -u joao@paciente.com:senha123 "http://localhost:8080/me/profissionais?especialidade=Ortopedia"
+curl -u joao@paciente.com:senha123 "http://localhost:8080/me/profissionais/1/disponibilidade?data=2026-08-20"
+```
+
+**5. Paciente marca uma consulta (isso vincula automaticamente esse profissional como responsável, já que é a primeira consulta do paciente):**
+
+```bash
+curl -u joao@paciente.com:senha123 -X POST http://localhost:8080/me/consultas \
+  -H "Content-Type: application/json" \
+  -d '{
+    "profissionalId": 1,
+    "dataHora": "2026-08-20T09:00:00",
+    "tipo": "PRESENCIAL",
+    "convenio": null
+  }'
+```
+
+**6. Profissional confere que o paciente aparece na sua lista (use o `id` do paciente retornado no passo 3, normalmente `1`) e envia uma mensagem — agora funciona, pois já existe uma consulta entre os dois:**
+
+```bash
+curl -u ana@fisiotech.com:senha123 http://localhost:8080/pacientes
 curl -u ana@fisiotech.com:senha123 -X POST http://localhost:8080/mensagens \
   -H "Content-Type: application/json" \
   -d '{"pacienteId": 1, "autor": "PROFISSIONAL", "conteudo": "Oi Joao, como vai o tratamento?"}'
 ```
 
-**5. Paciente confirma o login e lê a mensagem:**
+**7. Paciente lista suas conversas e lê a mensagem (use o `id` do profissional, normalmente `1`):**
 
 ```bash
-curl -u joao@paciente.com:senha123 http://localhost:8080/me/mensagens
+curl -u joao@paciente.com:senha123 http://localhost:8080/me/mensagens/caixa-entrada
+curl -u joao@paciente.com:senha123 http://localhost:8080/me/mensagens/1
 ```
 
-**6. Paciente responde:**
+**8. Paciente responde:**
 
 ```bash
-curl -u joao@paciente.com:senha123 -X POST http://localhost:8080/me/mensagens \
+curl -u joao@paciente.com:senha123 -X POST http://localhost:8080/me/mensagens/1 \
   -H "Content-Type: application/json" \
   -d '{"conteudo": "Oi Ana, tudo certo!"}'
 ```
 
-**7. Profissional confere a conversa completa e a caixa de entrada unificada:**
+**9. Profissional confere a conversa completa e a caixa de entrada unificada:**
 
 ```bash
 curl -u ana@fisiotech.com:senha123 "http://localhost:8080/mensagens?pacienteId=1"
 curl -u ana@fisiotech.com:senha123 http://localhost:8080/mensagens/caixa-entrada
 ```
 
-Para os demais recursos (`/consultas`, `/avaliacoes`) e os corpos de requisição exatos de cada endpoint, consulte o Swagger UI — ele reflete sempre o estado atual do código.
+**10. Paciente remarca a consulta e depois troca a senha:**
+
+```bash
+curl -u joao@paciente.com:senha123 -X PUT http://localhost:8080/me/consultas/1/remarcar \
+  -H "Content-Type: application/json" \
+  -d '{"novaDataHora": "2026-08-21T10:00:00"}'
+
+curl -u joao@paciente.com:senha123 -X PUT http://localhost:8080/me/senha \
+  -H "Content-Type: application/json" \
+  -d '{"senhaAtual": "senha123", "novaSenha": "novaSenha123"}'
+```
+
+(`PUT /me/consultas/{id}/cancelar` cancela em vez de remarcar; não canceladas aqui só para manter os dados do restante do fluxo. `POST /pacientes` — sem `/cadastro` — continua existindo para o profissional cadastrar um paciente diretamente, útil para o admin/profissional criar contas de teste sem depender do autocadastro; a diferença é que um paciente cadastrado assim já nasce vinculado ao profissional que o criou, mas *ainda assim* só consegue trocar mensagem com ele depois de existir uma consulta marcada entre os dois — a regra de mensagens é sempre "existe consulta", não "quem cadastrou".)
+
+Para os demais recursos (`/consultas`, `/avaliacoes`, `/admin/pacientes`) e os corpos de requisição exatos de cada endpoint, consulte o Swagger UI — ele reflete sempre o estado atual do código.
 
 ## Estrutura do projeto
 
