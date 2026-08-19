@@ -35,8 +35,10 @@ public class Paciente {
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "profissional_id", nullable = false)
+    // Nullable: paciente pode se autocadastrar sem medico ainda (fica vinculado
+    // quando marcar a primeira consulta).
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "profissional_id", nullable = true)
     private Profissional profissional;
 
     protected Paciente() {

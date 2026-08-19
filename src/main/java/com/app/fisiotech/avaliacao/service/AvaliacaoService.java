@@ -68,7 +68,8 @@ public class AvaliacaoService {
         Consulta consulta = consultaRepository.findById(consultaId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada."));
 
-        if (!consulta.getPaciente().getProfissional().getId().equals(profissionalId)) {
+        if (consulta.getPaciente().getProfissional() == null
+                || !consulta.getPaciente().getProfissional().getId().equals(profissionalId)) {
             throw new RecursoNaoEncontradoException("Consulta não encontrada.");
         }
 

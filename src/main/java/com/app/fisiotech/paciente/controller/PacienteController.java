@@ -23,6 +23,20 @@ public class PacienteController {
 
     private final PacienteService pacienteService;
 
+    @PostMapping("/cadastro")
+    public ResponseEntity<Void> cadastrarPublico(@Valid @RequestBody PacienteCreateRequest request) {
+        Paciente pacienteCriado = pacienteService.cadastrarPublico(request);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/pacientes/{id}")
+                .buildAndExpand(pacienteCriado.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).build();
+    }
+
+
     @PostMapping
     public ResponseEntity<Void> criar(
             @Valid @RequestBody PacienteCreateRequest request,

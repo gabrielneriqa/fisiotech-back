@@ -71,7 +71,7 @@ public class MensagemService {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));
 
-        if (!paciente.getProfissional().getId().equals(profissionalId)) {
+        if (paciente.getProfissional() == null || !paciente.getProfissional().getId().equals(profissionalId)) {
             throw new RecursoNaoEncontradoException("Paciente não encontrado.");
         }
 

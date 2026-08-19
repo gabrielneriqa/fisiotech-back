@@ -13,12 +13,15 @@ public record PacienteResponse(
 ) {
 
     public static PacienteResponse fromEntity(Paciente paciente){
+        Long profissionalId = paciente.getProfissional() != null ? paciente.getProfissional().getId() : null;
+        String profissionalNome = paciente.getProfissional() != null ? paciente.getProfissional().getNome() : null;
+
         return new PacienteResponse(
                 paciente.getId(),
                 paciente.getNome(),
                 paciente.getEmail(),
-                paciente.getProfissional().getId(),
-                paciente.getProfissional().getNome(),
+                profissionalId,
+                profissionalNome,
                 paciente.getDataCriacao()
         );
     }

@@ -56,7 +56,8 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada."));
 
-        if (!consulta.getPaciente().getProfissional().getId().equals(profissionalId)) {
+        if (consulta.getPaciente().getProfissional() == null
+                || !consulta.getPaciente().getProfissional().getId().equals(profissionalId)) {
             throw new RecursoNaoEncontradoException("Consulta não encontrada.");
         }
 
@@ -122,7 +123,7 @@ public class ConsultaService {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));
 
-        if (!paciente.getProfissional().getId().equals(profissionalId)) {
+        if (paciente.getProfissional() == null || !paciente.getProfissional().getId().equals(profissionalId)) {
             throw new RecursoNaoEncontradoException("Paciente não encontrado.");
         }
 

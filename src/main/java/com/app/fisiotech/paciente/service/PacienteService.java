@@ -50,6 +50,27 @@ public class PacienteService {
     }
 
 
+    @Transactional
+    public Paciente cadastrarPublico(PacienteCreateRequest request) {
+        String emailNormalizado = normalizarEmail(request.email());
+
+        if (pacienteRepository.existsByEmail(emailNormalizado)) {
+            throw new EmailJaCadastradoException("Já existe uma conta com este email.");
+        }
+
+        String senhaCriptografada = passwordEncoder.encode(request.senha());
+
+        Paciente paciente = new Paciente(
+                request.nome().trim(),
+                emailNormalizado,
+                senhaCriptografada,
+                null
+        );
+
+        return pacienteRepository.save(paciente);
+    }
+
+
     @Transactional(readOnly = true)
     public List<Paciente> listarTodos(Long profissionalId){
         return pacienteRepository.findByProfissionalId(profissionalId, Sort.by(Sort.Direction.ASC, "id"));
@@ -61,7 +82,7 @@ public class PacienteService {
         Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado."));
 
-        if (!paciente.getProfissional().getId().equals(profissionalId)) {
+        if (paciente.getProfissional() == null || !paciente.getProfissional().getId().equals(profissionalId)) {
             throw new RecursoNaoEncontradoException("Paciente não encontrado.");
         }
 
