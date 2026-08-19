@@ -18,6 +18,10 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
 
     boolean existsByProfissionalIdAndDataHoraAndStatusNot(Long profissionalId, LocalDateTime dataHora, StatusConsulta status);
 
+    boolean existsByProfissionalIdAndDataHoraAndStatusNotAndIdNot(Long profissionalId, LocalDateTime dataHora, StatusConsulta status, Long id);
+
     List<Consulta> findByProfissionalIdAndDataHoraBetweenAndStatusNot(Long profissionalId, LocalDateTime inicio, LocalDateTime fim, StatusConsulta status);
+
+    boolean existsByPacienteIdAndProfissionalId(Long pacienteId, Long profissionalId);
 
 }

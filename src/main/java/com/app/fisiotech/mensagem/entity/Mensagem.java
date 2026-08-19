@@ -1,6 +1,7 @@
 package com.app.fisiotech.mensagem.entity;
 
 import com.app.fisiotech.paciente.entity.Paciente;
+import com.app.fisiotech.profissional.entity.Profissional;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,10 @@ public class Mensagem {
     @JoinColumn(name = "paciente_id", nullable = false)
     private Paciente paciente;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "profissional_id", nullable = false)
+    private Profissional profissional;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "autor", nullable = false, length = 20)
     private AutorMensagem autor;
@@ -35,8 +40,9 @@ public class Mensagem {
     protected Mensagem() {
     }
 
-    public Mensagem(Paciente paciente, AutorMensagem autor, String conteudo) {
+    public Mensagem(Paciente paciente, Profissional profissional, AutorMensagem autor, String conteudo) {
         this.paciente = paciente;
+        this.profissional = profissional;
         this.autor = autor;
         this.conteudo = conteudo;
     }

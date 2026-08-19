@@ -7,6 +7,7 @@ import com.app.fisiotech.consulta.dto.ConsultaUpdateRequest;
 import com.app.fisiotech.consulta.entity.Consulta;
 import com.app.fisiotech.consulta.entity.StatusConsulta;
 import com.app.fisiotech.consulta.repository.ConsultaRepository;
+import com.app.fisiotech.exception.EstadoInvalidoException;
 import com.app.fisiotech.exception.HorarioIndisponivelException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
 import com.app.fisiotech.paciente.entity.Paciente;
@@ -168,6 +169,41 @@ public class ConsultaService {
         }
 
         return consulta;
+    }
+
+
+    @Transactional
+    public Consulta cancelarComoPaciente(Long id, Long pacienteId) {
+        Consulta consulta = buscarPorIdEPaciente(id, pacienteId);
+        validarStatusEditavel(consulta);
+
+        consulta.setStatus(StatusConsulta.CANCELADA);
+        return consultaRepository.save(consulta);
+    }
+
+
+    @Transactional
+    public Consulta remarcarComoPaciente(Long id, Long pacienteId, LocalDateTime novaDataHora) {
+        Consulta consulta = buscarPorIdEPaciente(id, pacienteId);
+        validarStatusEditavel(consulta);
+
+        boolean horarioOcupado = consultaRepository.existsByProfissionalIdAndDataHoraAndStatusNotAndIdNot(
+                consulta.getProfissional().getId(), novaDataHora, StatusConsulta.CANCELADA, id);
+
+        if (horarioOcupado) {
+            throw new HorarioIndisponivelException("Este horário não está mais disponível.");
+        }
+
+        consulta.setDataHora(novaDataHora);
+        consulta.setFoiRemarcada(true);
+        return consultaRepository.save(consulta);
+    }
+
+
+    private void validarStatusEditavel(Consulta consulta) {
+        if (consulta.getStatus() == StatusConsulta.REALIZADA || consulta.getStatus() == StatusConsulta.CANCELADA) {
+            throw new EstadoInvalidoException("Esta consulta não pode mais ser alterada.");
+        }
     }
 
 

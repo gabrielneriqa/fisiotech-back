@@ -1,5 +1,6 @@
 package com.app.fisiotech.admin.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -32,7 +33,14 @@ public class SecurityConfig {
                         .requestMatchers("/me/**").hasRole("PACIENTE")
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(basic -> basic.authenticationEntryPoint((request, response, authException) -> {
+                    // Sem customizar isso, o Spring manda o header WWW-Authenticate: Basic em todo 401,
+                    // que faz o navegador abrir o prompt nativo de login por cima da tela do app - mesmo
+                    // já existindo um formulário de login próprio tratando o 401 certinho.
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"message\":\"Credenciais inválidas.\"}");
+                }));
 
         return http.build();
     }

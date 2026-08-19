@@ -56,12 +56,7 @@ public class MensagemController {
 
     @GetMapping("/caixa-entrada")
     public ResponseEntity<List<CaixaEntradaItemResponse>> caixaEntrada(@AuthenticationPrincipal AuthenticatedUser usuarioLogado) {
-        List<CaixaEntradaItemResponse> response = mensagemService.listarCaixaEntrada(usuarioLogado.getId())
-                .stream()
-                .map(CaixaEntradaItemResponse::fromUltimaMensagem)
-                .toList();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(mensagemService.listarCaixaEntrada(usuarioLogado.getId()));
     }
 
 }

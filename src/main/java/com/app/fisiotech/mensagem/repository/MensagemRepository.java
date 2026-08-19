@@ -9,8 +9,8 @@ import java.util.Optional;
 
 public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
 
-    List<Mensagem> findByPacienteId(Long pacienteId, Sort sort);
+    List<Mensagem> findByPacienteIdAndProfissionalId(Long pacienteId, Long profissionalId, Sort sort);
 
-    Optional<Mensagem> findFirstByPacienteIdOrderByDataEnvioDesc(Long pacienteId);
+    Optional<Mensagem> findFirstByPacienteIdAndProfissionalIdOrderByDataEnvioDesc(Long pacienteId, Long profissionalId);
 
 }
