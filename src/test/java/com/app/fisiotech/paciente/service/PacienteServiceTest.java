@@ -5,6 +5,7 @@ import com.app.fisiotech.exception.RecursoNaoEncontradoException;
 import com.app.fisiotech.exception.SenhaAtualInvalidaException;
 import com.app.fisiotech.paciente.dto.AlterarSenhaRequest;
 import com.app.fisiotech.paciente.dto.PacienteCreateRequest;
+import com.app.fisiotech.paciente.dto.PacienteUpdateRequest;
 import com.app.fisiotech.paciente.entity.Paciente;
 import com.app.fisiotech.paciente.repository.PacienteRepository;
 import com.app.fisiotech.profissional.entity.Profissional;
@@ -162,5 +163,47 @@ class PacienteServiceTest {
 
         assertThat(paciente.getSenha()).isEqualTo("novoHash");
         verify(pacienteRepository).save(paciente);
+    }
+
+    // --- atualizar (profissional editando o proprio paciente): senha e opcional ---
+
+    private PacienteUpdateRequest updateRequest(String senha) {
+        return new PacienteUpdateRequest("Joao Silva", "joao@paciente.com", senha, null, null, null, null, null, null, null);
+    }
+
+    @Test
+    void naoDeveAlterarSenhaDoPacienteQuandoCampoNaoEEnviadoNaEdicao() {
+        when(pacienteRepository.findById(1L)).thenReturn(Optional.of(paciente));
+        when(pacienteRepository.existsByEmailAndIdNot(any(), any())).thenReturn(false);
+        when(pacienteRepository.save(any(Paciente.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Paciente resultado = pacienteService.atualizar(1L, updateRequest(null), 1L);
+
+        assertThat(resultado.getSenha()).isEqualTo("senhaCriptografada");
+        verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
+    void naoDeveAlterarSenhaDoPacienteQuandoCampoEnviadoEmBranco() {
+        when(pacienteRepository.findById(1L)).thenReturn(Optional.of(paciente));
+        when(pacienteRepository.existsByEmailAndIdNot(any(), any())).thenReturn(false);
+        when(pacienteRepository.save(any(Paciente.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Paciente resultado = pacienteService.atualizar(1L, updateRequest("   "), 1L);
+
+        assertThat(resultado.getSenha()).isEqualTo("senhaCriptografada");
+        verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
+    void deveAlterarSenhaDoPacienteQuandoNovaSenhaEEnviada() {
+        when(pacienteRepository.findById(1L)).thenReturn(Optional.of(paciente));
+        when(pacienteRepository.existsByEmailAndIdNot(any(), any())).thenReturn(false);
+        when(passwordEncoder.encode("novaSenha123")).thenReturn("novoHash");
+        when(pacienteRepository.save(any(Paciente.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Paciente resultado = pacienteService.atualizar(1L, updateRequest("novaSenha123"), 1L);
+
+        assertThat(resultado.getSenha()).isEqualTo("novoHash");
     }
 }

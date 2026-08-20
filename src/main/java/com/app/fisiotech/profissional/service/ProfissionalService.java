@@ -85,7 +85,9 @@ public class ProfissionalService {
 
         profissionalASerAtualizado.setNome(request.nome().trim());
         profissionalASerAtualizado.setEmail(emailNormalizado);
-        profissionalASerAtualizado.setSenha(passwordEncoder.encode(request.senha()));
+        if (request.senha() != null && !request.senha().isBlank()) {
+            profissionalASerAtualizado.setSenha(passwordEncoder.encode(request.senha()));
+        }
         profissionalASerAtualizado.setRegistroProfissional(request.registroProfissional().trim());
         profissionalASerAtualizado.setEspecialidade(request.especialidade().trim());
         profissionalASerAtualizado.setValorConsultaParticular(request.valorConsultaParticular());

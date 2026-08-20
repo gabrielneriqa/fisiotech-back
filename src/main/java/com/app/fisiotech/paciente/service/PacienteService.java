@@ -159,7 +159,9 @@ public class PacienteService {
 
         paciente.setNome(request.nome().trim());
         paciente.setEmail(emailNormalizado);
-        paciente.setSenha(passwordEncoder.encode(request.senha()));
+        if (request.senha() != null && !request.senha().isBlank()) {
+            paciente.setSenha(passwordEncoder.encode(request.senha()));
+        }
         paciente.setDataNascimento(request.dataNascimento());
         paciente.setSexo(request.sexo());
         paciente.setProfissao(request.profissao());
