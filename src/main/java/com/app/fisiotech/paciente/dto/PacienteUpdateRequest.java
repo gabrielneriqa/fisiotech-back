@@ -16,7 +16,6 @@ public record PacienteUpdateRequest(
         @Size(max = 120, message = "O email deve ter no máximo 120 caracteres")
         String email,
 
-        @NotBlank(message = "A senha é obrigatória")
         @Size(min = 8, max = 100, message = "A senha deve ter entre 8 e 100 caracteres")
         String senha,
 

@@ -3,6 +3,7 @@ package com.app.fisiotech.profissional.service;
 import com.app.fisiotech.exception.EmailJaCadastradoException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
 import com.app.fisiotech.profissional.dto.ProfissionalCreateRequest;
+import com.app.fisiotech.profissional.dto.ProfissionalUpdateRequest;
 import com.app.fisiotech.profissional.entity.Profissional;
 import com.app.fisiotech.profissional.repository.ProfissionalRepository;
 import org.junit.jupiter.api.Test;
@@ -110,5 +111,68 @@ class ProfissionalServiceTest {
 
         assertThatThrownBy(() -> profissionalService.buscarPorId(99L))
                 .isInstanceOf(RecursoNaoEncontradoException.class);
+    }
+
+    // --- atualizar: senha e opcional (nao deve forcar reset a cada edicao) ---
+
+    private Profissional profissionalExistente() {
+        Profissional profissional = new Profissional("Ana Souza", "ana@fisiotech.com", "senhaAntigaHash", "CREFITO-1", "Ortopedia");
+        try {
+            var field = Profissional.class.getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(profissional, 1L);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return profissional;
+    }
+
+    private ProfissionalUpdateRequest updateRequest(String senha) {
+        return new ProfissionalUpdateRequest(
+                "Ana Souza", "ana@fisiotech.com", senha, "CREFITO-1", "Ortopedia",
+                new BigDecimal("150.00"), List.of("Unimed"), null, null, null, null
+        );
+    }
+
+    @Test
+    void naoDeveAlterarSenhaQuandoCampoNaoEEnviadoNaEdicao() {
+        Profissional existente = profissionalExistente();
+        when(profissionalRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(profissionalRepository.existsByEmailAndIdNot(any(), any())).thenReturn(false);
+        when(profissionalRepository.existsByRegistroProfissionalAndIdNot(any(), any())).thenReturn(false);
+        when(profissionalRepository.save(any(Profissional.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Profissional resultado = profissionalService.atualizar(1L, updateRequest(null));
+
+        assertThat(resultado.getSenha()).isEqualTo("senhaAntigaHash");
+        verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
+    void naoDeveAlterarSenhaQuandoCampoEnviadoEmBranco() {
+        Profissional existente = profissionalExistente();
+        when(profissionalRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(profissionalRepository.existsByEmailAndIdNot(any(), any())).thenReturn(false);
+        when(profissionalRepository.existsByRegistroProfissionalAndIdNot(any(), any())).thenReturn(false);
+        when(profissionalRepository.save(any(Profissional.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Profissional resultado = profissionalService.atualizar(1L, updateRequest("  "));
+
+        assertThat(resultado.getSenha()).isEqualTo("senhaAntigaHash");
+        verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
+    void deveAlterarSenhaQuandoNovaSenhaEEnviada() {
+        Profissional existente = profissionalExistente();
+        when(profissionalRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(profissionalRepository.existsByEmailAndIdNot(any(), any())).thenReturn(false);
+        when(profissionalRepository.existsByRegistroProfissionalAndIdNot(any(), any())).thenReturn(false);
+        when(passwordEncoder.encode("novaSenha123")).thenReturn("novoHash");
+        when(profissionalRepository.save(any(Profissional.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Profissional resultado = profissionalService.atualizar(1L, updateRequest("novaSenha123"));
+
+        assertThat(resultado.getSenha()).isEqualTo("novoHash");
     }
 }
