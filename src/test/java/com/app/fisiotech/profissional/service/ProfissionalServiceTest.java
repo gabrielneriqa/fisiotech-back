@@ -1,7 +1,9 @@
 package com.app.fisiotech.profissional.service;
 
+import com.app.fisiotech.auth.dto.AlterarSenhaRequest;
 import com.app.fisiotech.exception.EmailJaCadastradoException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
+import com.app.fisiotech.exception.SenhaAtualInvalidaException;
 import com.app.fisiotech.profissional.dto.ProfissionalCreateRequest;
 import com.app.fisiotech.profissional.dto.ProfissionalUpdateRequest;
 import com.app.fisiotech.profissional.entity.Profissional;
@@ -174,5 +176,36 @@ class ProfissionalServiceTest {
         Profissional resultado = profissionalService.atualizar(1L, updateRequest("novaSenha123"));
 
         assertThat(resultado.getSenha()).isEqualTo("novoHash");
+    }
+
+    // --- alterarSenha (autoatendimento, F-02) ---
+
+    @Test
+    void naoDevePermitirAlterarPropriaSenhaComSenhaAtualIncorreta() {
+        Profissional existente = profissionalExistente();
+        when(profissionalRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(passwordEncoder.matches("senhaErrada", "senhaAntigaHash")).thenReturn(false);
+
+        AlterarSenhaRequest request = new AlterarSenhaRequest("senhaErrada", "novaSenha123");
+
+        assertThatThrownBy(() -> profissionalService.alterarSenha(1L, request))
+                .isInstanceOf(SenhaAtualInvalidaException.class);
+
+        verify(profissionalRepository, never()).save(any());
+    }
+
+    @Test
+    void devePermitirAlterarPropriaSenhaComSenhaAtualCorreta() {
+        Profissional existente = profissionalExistente();
+        when(profissionalRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(passwordEncoder.matches("senhaAntiga123", "senhaAntigaHash")).thenReturn(true);
+        when(passwordEncoder.encode("novaSenha123")).thenReturn("novoHash");
+
+        AlterarSenhaRequest request = new AlterarSenhaRequest("senhaAntiga123", "novaSenha123");
+
+        profissionalService.alterarSenha(1L, request);
+
+        assertThat(existente.getSenha()).isEqualTo("novoHash");
+        verify(profissionalRepository).save(existente);
     }
 }

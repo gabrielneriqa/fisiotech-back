@@ -1,5 +1,7 @@
 package com.app.fisiotech.profissional.controller;
 
+import com.app.fisiotech.auth.dto.AlterarSenhaRequest;
+import com.app.fisiotech.auth.security.AuthenticatedUser;
 import com.app.fisiotech.profissional.dto.ProfissionalCreateRequest;
 import com.app.fisiotech.profissional.dto.ProfissionalResponse;
 import com.app.fisiotech.profissional.dto.ProfissionalUpdateRequest;
@@ -8,6 +10,7 @@ import com.app.fisiotech.profissional.service.ProfissionalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -66,6 +69,16 @@ public class ProfissionalController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarPorId(@PathVariable Long id) {
         profissionalService.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @PutMapping("/me/senha")
+    public ResponseEntity<Void> alterarPropriaSenha(
+            @Valid @RequestBody AlterarSenhaRequest request,
+            @AuthenticationPrincipal AuthenticatedUser usuarioLogado
+    ) {
+        profissionalService.alterarSenha(usuarioLogado.getId(), request);
         return ResponseEntity.noContent().build();
     }
 
