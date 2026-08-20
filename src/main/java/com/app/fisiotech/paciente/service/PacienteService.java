@@ -2,7 +2,7 @@ package com.app.fisiotech.paciente.service;
 
 import com.app.fisiotech.exception.EmailJaCadastradoException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
-import com.app.fisiotech.paciente.dto.AlterarSenhaRequest;
+import com.app.fisiotech.auth.dto.AlterarSenhaRequest;
 import com.app.fisiotech.paciente.dto.MePerfilUpdateRequest;
 import com.app.fisiotech.paciente.dto.PacienteAdminUpdateRequest;
 import com.app.fisiotech.paciente.dto.PacienteCreateRequest;

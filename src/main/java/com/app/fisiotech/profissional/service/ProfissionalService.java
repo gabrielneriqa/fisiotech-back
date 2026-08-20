@@ -1,7 +1,9 @@
 package com.app.fisiotech.profissional.service;
 
+import com.app.fisiotech.auth.dto.AlterarSenhaRequest;
 import com.app.fisiotech.exception.EmailJaCadastradoException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
+import com.app.fisiotech.exception.SenhaAtualInvalidaException;
 import com.app.fisiotech.profissional.dto.ProfissionalCreateRequest;
 import com.app.fisiotech.profissional.dto.ProfissionalUpdateRequest;
 import com.app.fisiotech.profissional.entity.Profissional;
@@ -110,6 +112,19 @@ public class ProfissionalService {
                 .filter(p -> nomeFiltro == null || nomeFiltro.isBlank() || p.getNome().toLowerCase(Locale.ROOT).contains(nomeFiltro))
                 .filter(p -> especialidadeFiltro == null || especialidadeFiltro.isBlank() || p.getEspecialidade().toLowerCase(Locale.ROOT).contains(especialidadeFiltro))
                 .toList();
+    }
+
+
+    @Transactional
+    public void alterarSenha(Long profissionalId, AlterarSenhaRequest request) {
+        Profissional profissional = buscarPorId(profissionalId);
+
+        if (!passwordEncoder.matches(request.senhaAtual(), profissional.getSenha())) {
+            throw new SenhaAtualInvalidaException("Senha atual incorreta.");
+        }
+
+        profissional.setSenha(passwordEncoder.encode(request.novaSenha()));
+        profissionalRepository.save(profissional);
     }
 
 

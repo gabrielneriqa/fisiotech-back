@@ -15,7 +15,7 @@ import com.app.fisiotech.me.dto.MinhaMensagemCreateRequest;
 import com.app.fisiotech.mensagem.dto.MensagemResponse;
 import com.app.fisiotech.mensagem.dto.MinhaConversaResponse;
 import com.app.fisiotech.mensagem.service.MensagemService;
-import com.app.fisiotech.paciente.dto.AlterarSenhaRequest;
+import com.app.fisiotech.auth.dto.AlterarSenhaRequest;
 import com.app.fisiotech.paciente.dto.MePerfilUpdateRequest;
 import com.app.fisiotech.paciente.dto.PacienteResponse;
 import com.app.fisiotech.paciente.service.PacienteService;

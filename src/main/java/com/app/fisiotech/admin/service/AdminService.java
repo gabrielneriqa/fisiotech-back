@@ -3,7 +3,10 @@ package com.app.fisiotech.admin.service;
 import com.app.fisiotech.admin.dto.AdminCreateRequest;
 import com.app.fisiotech.admin.entity.Admin;
 import com.app.fisiotech.admin.repository.AdminRepository;
+import com.app.fisiotech.auth.dto.AlterarSenhaRequest;
 import com.app.fisiotech.exception.EmailJaCadastradoException;
+import com.app.fisiotech.exception.RecursoNaoEncontradoException;
+import com.app.fisiotech.exception.SenhaAtualInvalidaException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,20 @@ public class AdminService {
       );
 
       return adminRepository.save(admin);
+    }
+
+
+    @Transactional
+    public void alterarSenha(Long adminId, AlterarSenhaRequest request) {
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Admin não encontrado."));
+
+        if (!passwordEncoder.matches(request.senhaAtual(), admin.getSenha())) {
+            throw new SenhaAtualInvalidaException("Senha atual incorreta.");
+        }
+
+        admin.setSenha(passwordEncoder.encode(request.novaSenha()));
+        adminRepository.save(admin);
     }
 
 
