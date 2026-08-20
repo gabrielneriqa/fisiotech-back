@@ -4,7 +4,9 @@ import com.app.fisiotech.avaliacao.dto.AvaliacaoCreateRequest;
 import com.app.fisiotech.avaliacao.entity.Avaliacao;
 import com.app.fisiotech.avaliacao.repository.AvaliacaoRepository;
 import com.app.fisiotech.consulta.entity.Consulta;
+import com.app.fisiotech.consulta.entity.StatusConsulta;
 import com.app.fisiotech.consulta.repository.ConsultaRepository;
+import com.app.fisiotech.exception.EstadoInvalidoException;
 import com.app.fisiotech.exception.RecursoDuplicadoException;
 import com.app.fisiotech.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class AvaliacaoService {
     @Transactional
     public Avaliacao criar(AvaliacaoCreateRequest request, Long profissionalId) {
         Consulta consulta = buscarConsultaDoProfissional(request.consultaId(), profissionalId);
+        validarConsultaRealizada(consulta);
 
         if (avaliacaoRepository.existsByConsultaId(consulta.getId())) {
             throw new RecursoDuplicadoException("Essa consulta já foi avaliada.");
@@ -44,6 +47,7 @@ public class AvaliacaoService {
     @Transactional
     public Avaliacao criarComoPaciente(AvaliacaoCreateRequest request, Long pacienteId) {
         Consulta consulta = buscarConsultaDoPaciente(request.consultaId(), pacienteId);
+        validarConsultaRealizada(consulta);
 
         if (avaliacaoRepository.existsByConsultaId(consulta.getId())) {
             throw new RecursoDuplicadoException("Essa consulta já foi avaliada.");
@@ -61,6 +65,13 @@ public class AvaliacaoService {
 
         return avaliacaoRepository.findByConsultaId(consultaId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Essa consulta ainda não foi avaliada."));
+    }
+
+
+    private void validarConsultaRealizada(Consulta consulta) {
+        if (consulta.getStatus() != StatusConsulta.REALIZADA) {
+            throw new EstadoInvalidoException("Só é possível avaliar consultas já realizadas.");
+        }
     }
 
 
